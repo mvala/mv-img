@@ -51,9 +51,12 @@ function CreateWorkspace() {
 }
 
 function SyncRawFromJpeg() {
-    echo "Removing RAW from JPEG ..."
-    rm -rf $MY_WK_RAW_DIR
-    mkdir -p $MY_WK_RAW_DIR
+    if [ -d $MY_WK_RAW_DIR ];then
+        rm $MY_WK_RAW_DIR/*$MY_EXT_RAW
+    else
+        mkdir -p $MY_WK_RAW_DIR
+    fi
+
     for f in $(find $MY_WK_JPEG_DIR -type l -name '*'$MY_EXT_JPEG'');do
         ftmp=$(readlink -f $f)
         ftmp=${ftmp/$MY_EXT_JPEG/$MY_EXT_RAW}
@@ -62,12 +65,12 @@ function SyncRawFromJpeg() {
 }
 
 function PrintSummary() {
-    NUM_RAW=$(find $MY_SRC_DIR -type f -name '*'$MY_EXT_RAW'' | wc -l)
     NUM_JPEG=$(find $MY_SRC_DIR -type f -name '*'$MY_EXT_JPEG'' | wc -l)
-    echo "SRC : RAW=$NUM_RAW JPEG=$NUM_JPEG"
-    NUM_RAW=$(find $MY_WK_RAW_DIR -type l -name '*'$MY_EXT_RAW'' | wc -l)
+    NUM_RAW=$(find $MY_SRC_DIR -type f -name '*'$MY_EXT_RAW'' | wc -l)
+    echo "SRC : JPEG=$NUM_JPEG RAW=$NUM_RAW"
     NUM_JPEG=$(find $MY_WK_JPEG_DIR -type l -name '*'$MY_EXT_JPEG'' | wc -l)
-    echo "WK : RAW=$NUM_RAW JPEG=$NUM_JPEG"
+    [ -d $MY_WK_RAW_DIR ] && NUM_RAW=$(find $MY_WK_RAW_DIR -type l -name '*'$MY_EXT_RAW'' | wc -l) || NUM_RAW=0
+    echo "WK : JPEG=$NUM_JPEG RAW=$NUM_RAW"
 }
 
 if [ $# -lt 1 ];then
