@@ -5,7 +5,7 @@ MY_EXT_JPEG=".JPG"
 
 MY_REMOVE_WK_SPACE=0
 MY_CREATE_WK_SPACE=0
-MY_SYNC_RAW_FROM_JPEG=1
+MY_SYNC_RAW_FROM_JPEG=0
 
 MY_SRC_DIR=
 MY_BASE_DIR=
@@ -16,20 +16,38 @@ MY_WK_RAW_DIR=
 
 
 function Help() {
-    echo "$0 <src dir>"
+cat <<EOF    
+
+usage: $0 <options> <path to src dir>
+
+OPTIONS:
+    -r   Sync Raw files with Jpeg direcotry
+
+EOF
+}
+
+function CheckSrcDirectory() {
+    if [ ! -d $MY_SRC_DIR ];then
+        echo "W: Direcotry '$MY_SRC_DIR' doesn't exist. Please create it first !!!"
+        exit 20
+    fi
+}
+
+function CheckWkDirectory() {
+    if [ ! -d $MY_WK_DIR ];then
+        echo "W: Direcotry '$MY_WK_DIR' doesn't exist. Creating one ..."
+        CreateWorkspace
+    fi
 }
 
 function CreateWorkspace() {
     [ $MY_REMOVE_WK_SPACE -eq 1 ] && rm -rf $MY_WK_DIR
-    if [ -d $MY_WK_DIR ];then
-        echo "W: Direcotry '$MY_WK_DIR' already exists. Please remove it first !!!"
-        echo "  rm -rf $MY_WK_DIR"
-        exit 21
+    if [ ! -d $MY_WK_DIR ];then
+        mkdir -p $MY_WK_DIR/jpg
+        for f in $(find $MY_SRC_DIR -type f -name '*'$MY_EXT_JPEG'');do
+            ln -s $f $MY_WK_DIR/jpg/$(basename $f)
+        done
     fi
-    mkdir -p $MY_WK_DIR/jpg
-    for f in $(find $MY_SRC_DIR -type f -name '*'$MY_EXT_JPEG'');do
-        ln -s $f $MY_WK_DIR/jpg/$(basename $f)
-    done    
 }
 
 function SyncRawFromJpeg() {
@@ -52,10 +70,32 @@ function PrintSummary() {
     echo "WK : RAW=$NUM_RAW JPEG=$NUM_JPEG"
 }
 
-if [ ! $# -eq 1 ];then
+if [ $# -lt 1 ];then
     Help
     exit 10
 fi
+
+while getopts ":r:" optname
+do
+    case "$optname" in
+        "r")
+            echo "Option $optname is specified"
+            MY_SYNC_RAW_FROM_JPEG=1
+            shift
+            ;;
+        "?")
+            echo "Unknown option $OPTARG"
+            ;;
+        ":")
+            echo "No argument value for option $OPTARG"
+            ;;
+        *)
+            # Should not occur
+            echo "Unknown error while processing options"
+            ;;
+    esac
+    echo "OPTIND is now $OPTIND"
+done
 
 if [  "$(basename $1)" != "src" ];then
     echo "E:You have to point to 'src' direcotry !!!"
@@ -68,15 +108,13 @@ MY_WK_DIR=$MY_BASE_DIR/wk
 MY_WK_JPEG_DIR=$MY_WK_DIR/jpg
 MY_WK_RAW_DIR=$MY_WK_DIR/raw
 
-
 echo "Processing : '$MY_BASE_DIR'"
 
-[ $MY_CREATE_WK_SPACE -eq 1 ] && CreateWorkspace
+CheckSrcDirectory
+CreateWorkspace
 
 if [ -d $MY_WK_DIR ];then
     [ $MY_SYNC_RAW_FROM_JPEG -eq 1 ] && SyncRawFromJpeg
-else
-    echo "W: Working direcotry '' doesn't exist"
 fi
 
 PrintSummary
