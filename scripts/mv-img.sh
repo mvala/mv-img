@@ -16,7 +16,7 @@ MY_WK_RAW_DIR=
 
 
 function Help() {
-cat <<EOF    
+cat <<EOF
 
 usage: $0 <options> <path to src dir>
 
@@ -43,9 +43,9 @@ function CheckWkDirectory() {
 function CreateWorkspace() {
     [ $MY_REMOVE_WK_SPACE -eq 1 ] && rm -rf $MY_WK_DIR
     if [ ! -d $MY_WK_DIR ];then
-        mkdir -p $MY_WK_DIR/jpg
+        [ -d $MY_WK_JPEG_DIR ] || mkdir -p $MY_WK_JPEG_DIR
         for f in $(find $MY_SRC_DIR -type f -name '*'$MY_EXT_JPEG'');do
-            ln -s $f $MY_WK_DIR/jpg/$(basename $f)
+            ln -s $f $MY_WK_JPEG_DIR/$(basename $f)
         done
     fi
 }
