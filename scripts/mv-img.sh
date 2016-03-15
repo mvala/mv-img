@@ -46,7 +46,7 @@ function CreateWorkspace() {
     for f in $(find $MY_WK_SRC_DIR -type f -name '*'$MY_EXT_JPEG'');do
          fout=${f/$MY_WK_SRC_DIR/$MY_WK_JPEG_DIR}
         [ -d  $(dirname $fout) ] || mkdir -p  $(dirname $fout)
-        ln -s $f $fout
+        ln -sfn $f $fout
     done
     cd $MY_BASE_DIR
     SyncRawFromJpeg
